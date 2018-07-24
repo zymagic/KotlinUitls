@@ -14,9 +14,9 @@ abstract class AbsListAdapter<T> : BaseAdapter() {
     val data: MutableList<T> = ArrayList()
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-        var holder: ViewHolder<T>
+        val holder: ViewHolder<T>
         if (convertView == null) {
-            var view = createView(getItemViewType(position))
+            val view = createView(getItemViewType(position))
             holder = onCreateViewHolder(view)
             view.tag = holder
         } else {
@@ -31,7 +31,7 @@ abstract class AbsListAdapter<T> : BaseAdapter() {
     }
 
     override fun getItemId(position: Int): Long {
-        return position as Long
+        return position.toLong()
     }
 
     override fun getCount(): Int {

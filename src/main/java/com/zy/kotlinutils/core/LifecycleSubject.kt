@@ -13,20 +13,20 @@ private interface LifecycleSubject {
 
 abstract class LifecycleObserver: LifecycleSubject
 
-class SimpleLifecycleObserver: LifecycleObserver() {
-    override open fun onStart() {
+abstract class SimpleLifecycleObserver: LifecycleObserver() {
+    override fun onStart() {
     }
 
-    override open fun onStop() {
+    override fun onStop() {
     }
 
-    override open fun onResume() {
+    override fun onResume() {
     }
 
-    override open fun onPause() {
+    override fun onPause() {
     }
 
-    override open fun onDestroy() {
+    override fun onDestroy() {
     }
 }
 

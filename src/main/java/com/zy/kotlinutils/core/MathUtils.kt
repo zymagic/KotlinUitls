@@ -21,25 +21,36 @@ infix fun <T : Comparable<T>> T.clamp(pair: Pair<T, T>) : T {
     }
 }
 
-infix fun <T: Comparable<T>> Pair<T, T>.clamp(v: T) : T {
-    return v.clamp(first, second)
+fun <T: Comparable<T>> clamp(min: T, max: T, block: () -> T): T {
+    return block().clamp(min, max)
 }
 
-infix fun <T : Comparable<T>> T.lowerLimit(other: T) : T {
-    return other.minTo(this)
+infix fun <T: Comparable<T>> Pair<T, T>.clamp(block: () -> T) : T {
+    return block().clamp(first, second)
+}
+
+infix fun <T : Comparable<T>> T.minFor(block: () -> T) : T {
+    return block().minTo(this)
 }
 
 infix fun <T : Comparable<T>> T.minTo(other: T) : T {
     return if (this < other) other else this
 }
 
-infix fun <T : Comparable<T>> T.upperLimit(other: T) : T {
-    return other.maxTo(this)
+infix fun <T : Comparable<T>> T.maxFor(block: () -> T) : T {
+    return block().maxTo(this)
 }
 
 infix fun <T : Comparable<T>> T.maxTo(other: T) : T {
     return if (this > other) other else this
 }
+
+fun positive(block: () -> Int) = block().minTo(0)
+
+fun negative(block: () -> Int) = block().maxTo(0)
+fun negative(block: () -> Float) = block().maxTo(0f)
+fun negative(block: () -> Long) = block().maxTo(0L)
+fun negative(block: () -> Double) = block().maxTo(0.0)
 
 infix fun Pair<Int, Int>.mix(a: Float) : Int {
     return (first + (second - first) * a).toInt()
@@ -73,5 +84,4 @@ fun Double.sqrt() = kotlin.math.sqrt(absoluteValue)
 fun testMath() {
     1 to 2 mix 3.0f
     3.0f mix (1 to 2)
-    1 to 2 clamp 3
 }

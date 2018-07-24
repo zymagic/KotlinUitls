@@ -27,3 +27,5 @@ fun String.toDateLong() : Long {
         -1
     }
 }
+
+fun Long.toDate(pattern: String) = SimpleDateFormat(pattern, Locale.getDefault()).format(Date(this))

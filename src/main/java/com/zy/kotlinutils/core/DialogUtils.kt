@@ -57,8 +57,9 @@ fun <R> Activity.progress(dialog: ProgressDialog? = null, run: () -> R) : Progre
     pd.show()
     async {
         run()
-    }.callbackOnUiThread {
-        pd.dismiss()
+        uiThread {
+            pd.dismiss()
+        }
     }
     return pd
 }

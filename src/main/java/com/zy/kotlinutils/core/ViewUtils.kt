@@ -6,7 +6,6 @@ import android.support.v4.view.ViewCompat
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
-import com.zy.kotlinutils.AppInterface
 
 /**
  * Created by zy on 17-12-26.
