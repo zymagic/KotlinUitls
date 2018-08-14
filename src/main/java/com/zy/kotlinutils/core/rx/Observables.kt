@@ -1,30 +1,5 @@
 package com.zy.kotlinutils.core.rx
 
-import java.util.concurrent.TimeUnit
-
-abstract class Observable<T> : ObservableSource<T> {
-
-    override fun subscribe(observer: Observer<T>) {
-        subscribeActual(observer)
-    }
-
-    abstract fun subscribeActual(observer : Observer<T>)
-
-    fun subscribe(onNext: (T) -> Unit = {}) : Disposable {
-        return subscribe(onNext, {})
-    }
-
-    fun subscribe(onNext: (T) -> Unit, onError: (Throwable) -> Unit) : Disposable {
-        return LambdaObserver({}, onNext, onError, {}).apply { subscribeActual(this) }
-    }
-
-    fun subscribe(onSubscribe: (Disposable?) -> Unit = {},
-                  onNext: (T) -> Unit,
-                  onError: (Throwable) -> Unit,
-                  onComplete: () -> Unit = {}) : Disposable {
-        return LambdaObserver(onSubscribe, onNext, onError, onComplete).apply { subscribeActual(this) }
-    }
-}
 
 abstract class ObjectObservable<T> : Observable<T>() {
     override fun subscribeActual(observer: Observer<T>) {
@@ -111,17 +86,56 @@ class EmitterObservable<T>(private val f: (Emitter<T>) -> Unit) : Observable<T>(
 
 }
 
-class DelayedObservable<T>(private val source: Observable<T>, private val delay: Long) : Observable<T>(), Disposable {
-    var id : Int = 0
+class DelayedObservable<T>(private val source: Observable<T>, private val delay: Long) : Observable<T>() {
 
     override fun subscribeActual(observer: Observer<T>) {
-        id = WORK.execute(delay) { source.subscribe(observer) }
+        source.subscribe(DelayObserver(observer, delay))
+    }
+}
+
+class RetryObservable<T, R>(private val source: Observable<T>, private val retry: (Throwable) -> Observable<R>) : Observable<T>() {
+
+    override fun subscribeActual(observer: Observer<T>) {
+        source.subscribe(RetryObserver(observer, source, retry))
+    }
+}
+
+class OnSubscribeObservable<T>(private val source: Observable<T>, private val f: (Disposable?) -> Unit) : Observable<T>() {
+
+    override fun subscribeActual(observer: Observer<T>) {
+        source.subscribe(OnSubscribeObserver(observer, f))
     }
 
-    override fun dispose() {
-        if (id != 0) {
-            WORK.cancel(id)
-        }
+}
+
+class OnNextObservable<T>(private val source: Observable<T>, private val f: (T) -> Unit) : Observable<T>() {
+
+    override fun subscribeActual(observer: Observer<T>) {
+        source.subscribe(OnNextObserver(observer, f))
+    }
+
+}
+
+class OnErrorObservable<T>(private val source: Observable<T>, private val f: (Throwable) -> Unit) : Observable<T>() {
+
+    override fun subscribeActual(observer: Observer<T>) {
+        source.subscribe(OnErrorObserver(observer, f))
+    }
+
+}
+
+class OnCompleteObservable<T>(private val source: Observable<T>, private val f: () -> Unit) : Observable<T>() {
+
+    override fun subscribeActual(observer: Observer<T>) {
+        source.subscribe(OnCompleteObserver(observer, f))
+    }
+
+}
+
+class FinallyObservable<T>(private val source: Observable<T>, private val f: () -> Unit) : Observable<T>() {
+
+    override fun subscribeActual(observer: Observer<T>) {
+        source.subscribe(FinallyObserver(observer, f))
     }
 
 }

@@ -1,29 +1,5 @@
 package com.zy.kotlinutils.core.rx
 
-import kotlin.reflect.KClass
-import kotlin.reflect.KType
-
-interface Disposable {
-    fun dispose()
-}
-
-interface ObservableSource<T> {
-    fun subscribe(observer: Observer<T>)
-}
-
-interface Observer<T> {
-    fun onSubscribe(d: Disposable?)
-    fun onNext(t: T)
-    fun onError(t: Throwable)
-    fun onComplete()
-}
-
-interface Emitter<T> {
-    fun onNext(t: T)
-    fun onError(t: Throwable)
-    fun onComplete()
-}
-
 fun <T, R> Observable<T>.map(mapFunction: T.() -> R) = MapObservable(this, mapFunction)
 
 fun <T, R> Observable<T>.flatMap(f: (T) -> Observable<R>) = FlatMapObservable(this, f)
@@ -34,14 +10,19 @@ fun <T> Observable<T>.subscribeOn(scheduler: Scheduler) = SubscribeOnObservable(
 
 fun <T> Observable<T>.delay(delay: Long) = DelayedObservable(this, delay)
 
-fun <R> rxOf(f : () -> R) = CreatorObservable(f)
+fun <T, R> Observable<T>.retry(f: (Throwable) -> Observable<R>) = RetryObservable(this, f)
 
-fun <T> rxBy(f : (Emitter<T>) -> Unit) = EmitterObservable(f)
+fun <T> Observable<T>.onSubscribe(f: (Disposable?) -> Unit) = OnSubscribeObservable(this, f)
 
-fun <T> T.rx() = SingleObservable(this)
+fun <T> Observable<T>.onNext(f: (T) -> Unit) = OnNextObservable(this, f)
 
-fun <T> Array<T>.rxBatch() = BatchObservable(::iterator)
-fun <T> Iterable<T>.rxBatch() = BatchObservable(::iterator)
+fun <T> Observable<T>.onError(f: (Throwable) -> Unit) = OnErrorObservable(this, f)
+
+fun <T> Observable<T>.onComplete(f: () -> Unit) = OnCompleteObservable(this, f)
+
+fun <T> Observable<T>.finally(f: () -> Unit) = FinallyObservable(this, f)
+
+fun <T, R> Observable<T>.compose(f: (Observable<T>) -> Observable<R>) = f(this)
 
 fun testRx() {
     var a = listOf(1, 2)
@@ -51,7 +32,23 @@ fun testRx() {
         toFloat()
     }.flatMap {
         it.rx()
+    }.delay(1000)
+    .retry {
+        it.rx()
+    }.onSubscribe {
+        it?.dispose()
+    }.onNext {
+                it.toByte()
+    }.onError {
+        it.rx()
+    }.onComplete {
+        // xxx
+    }.finally {
+        // xxx
     }.subscribeOn(IO)
-            .observeOn(MAIN)
-            .subscribe { 12345 }
+    .observeOn(MAIN)
+    .compose {
+        it.map { toByte() }
+    }
+    .subscribe { 12345 }
 }

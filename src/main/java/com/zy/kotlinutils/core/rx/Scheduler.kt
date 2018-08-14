@@ -4,11 +4,6 @@ import android.os.Handler
 import android.os.Looper
 import java.util.concurrent.*
 
-interface Scheduler {
-    fun execute(delay: Long = 0, f: () -> Unit) : Int
-    fun cancel(id: Int)
-}
-
 val IO_EXECUTOR = Executors.newFixedThreadPool(5) { Thread(it, "rx-io") }
 val HTTP_EXECUTOR = Executors.newCachedThreadPool { Thread(it, "rx-http") }
 val WORK_EXECUTOR = Executors.newScheduledThreadPool(5) { Thread(it, "rx-work") }
@@ -34,7 +29,7 @@ abstract class AbstractScheduler : Scheduler {
 
 }
 
-class Task(val f: () -> Unit, val map: HashMap<Int, Task>) : Runnable {
+class Task(private val f: () -> Unit, private val map: HashMap<Int, Task>) : Runnable {
 
     override fun run() {
         map.remove(hashCode())

@@ -6,17 +6,23 @@ import android.content.Intent
 import android.os.Parcelable
 import java.io.Serializable
 
-fun Context.load(intent: Intent, vararg params: Pair<String, Any>) {
-    params.forEach {
-        when (it.second) {
-            is Number -> intent.putExtra(it.first, it.second as Number)
-            is String -> intent.putExtra(it.first, it.second as String)
-            is Char -> intent.putExtra(it.first, it.second as Char)
-            is Parcelable -> intent.putExtra(it.first, it.second as Parcelable)
-            is Serializable -> intent.putExtra(it.first, it.second as Serializable)
-            else -> intent.putExtra(it.first, it.second.toString())
+fun Context.launch(intent: Intent, vararg params: Pair<String, Any>) {
+    launch(intent) {
+        params.forEach {
+            when (it.second) {
+                is Number -> putExtra(it.first, it.second as Number)
+                is String -> putExtra(it.first, it.second as String)
+                is Char -> putExtra(it.first, it.second as Char)
+                is Parcelable -> putExtra(it.first, it.second as Parcelable)
+                is Serializable -> putExtra(it.first, it.second as Serializable)
+                else -> putExtra(it.first, it.second.toString())
+            }
         }
     }
+}
+
+fun Context.launch(intent: Intent, f: Intent.() -> Unit) {
+    intent.f()
     if (this !is Activity) {
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
@@ -41,7 +47,7 @@ fun Context.startActivityCallback(intent: Intent, cbk: (Int, Intent?) -> Unit) {
                 fragmentManager?.beginTransaction()?.add(fragment, "cbk")?.commitAllowingStateLoss()
             }
         }
-        else -> load(intent)
+        else -> launch(intent)
     }
 }
 
@@ -62,6 +68,7 @@ internal class ActionFragment : android.app.Fragment() {
         if (requestCode == REQUEST_CODE_CALLBACK) {
             callback?.invoke(resultCode, data)
         }
+        dismiss()
     }
 
     fun dismiss() {
@@ -86,6 +93,7 @@ internal class ActionSupportFragment : android.support.v4.app.Fragment() {
         if (requestCode == REQUEST_CODE_CALLBACK) {
             callback?.invoke(resultCode, data)
         }
+        dismiss()
     }
 
     fun dismiss() {

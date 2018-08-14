@@ -27,7 +27,7 @@ fun uiThread(f: () -> Unit) {
     if (Looper.getMainLooper() == Looper.myLooper()) {
         f()
     } else {
-        UI_HANDLER.post({ f() })
+        UI_HANDLER.post(f)
     }
 }
 
