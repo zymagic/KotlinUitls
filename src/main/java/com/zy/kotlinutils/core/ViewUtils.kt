@@ -11,11 +11,11 @@ import android.widget.*
  * Created by zy on 17-12-26.
  */
 fun <T: View> View.sss(id: Int): T? {
-    return findViewById(id) as T
+    return findViewById(id)
 }
 
 fun <T: View> T.detach() {
-    var vp = parent
+    val vp = parent
     if (vp is ViewGroup) {
         vp.removeView(this)
     }
@@ -72,6 +72,10 @@ var TextView.bottomIcon: Drawable?
         setCompoundDrawablesWithIntrinsicBounds(compoundDrawables[0], compoundDrawables[1], compoundDrawables[2], value)
     }
     get() = compoundDrawables[3]
+
+var View.bg: Drawable?
+    set(value) = ViewCompat.setBackground(this, value)
+    get() = background
 
 fun View.bg(d: Drawable) {
     ViewCompat.setBackground(this, d)

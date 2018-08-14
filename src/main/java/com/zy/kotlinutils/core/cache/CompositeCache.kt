@@ -3,7 +3,7 @@ package com.zy.kotlinutils.core.cache
 /**
  * Created by zy on 17-12-10.
  */
-open class CompositeCache<K, V>(vararg val caches: Cache<K, V>): Cache<K, V> {
+open class CompositeCache<K, V>(private vararg val caches: Cache<K, V>) : Cache<K, V> {
 
     override fun put(key: K, value: V) {
         for (cache in caches) {

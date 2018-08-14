@@ -49,6 +49,11 @@ fun <T, R: () -> Boolean> R.select(a: T, b: T): T = this.invoke().select(a, b)
 
 fun <T> select(a: T, b: T, f: () -> Boolean) : T = f().select(a, b)
 
+fun Cursor.manage(f: Cursor.() -> Unit) {
+    f()
+    closeQuietly()
+}
+
 fun test2() {
     async {
         //do something

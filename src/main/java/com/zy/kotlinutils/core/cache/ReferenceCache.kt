@@ -4,95 +4,88 @@ import java.lang.ref.Reference
 import java.lang.ref.ReferenceQueue
 import java.lang.ref.SoftReference
 import java.lang.ref.WeakReference
-import java.util.*
+import kotlin.collections.HashMap
 
 /**
  * Created by zy on 17-12-8.
  */
-abstract class ReferenceCache<K, V, R: Reference<V>>: AbsCache<K, V> {
+abstract class ReferenceCache<K, V, R: Reference<V>> : AbsCache<K, V> {
 
-    var mReferenceMap: HashMap<K, R>
-    var mReferenceQueue: ReferenceQueue<V> = ReferenceQueue()
+    private val referenceMap: HashMap<K, R>
+    private val referenceQueue: ReferenceQueue<V> = ReferenceQueue()
 
-    fun HashMap<K, R>.dump(): Map<K, V> {
-        var ret = HashMap<K, V>(this.size)
-        for (key in this.keys) {
-            var v = this[key]?.get() ?: continue
-            ret.put(key, v)
+    private fun HashMap<K, R>.dump() : Map<K, V> {
+        val ret = HashMap<K, V>()
+        forEach {
+            it.value.get()?.let { v ->
+                ret[it.key] = v
+            }
         }
         return ret
     }
 
     constructor() {
-        mReferenceMap = HashMap()
+        referenceMap = HashMap()
     }
 
     constructor(initialSize: Int) {
-        mReferenceMap = HashMap(initialSize)
+        referenceMap = HashMap(initialSize)
     }
 
     override fun all(): Map<K, V> {
         trim()
-        return mReferenceMap.dump()
+        return referenceMap.dump()
     }
 
     override fun onPut(key: K, value: V) {
         trim()
-        var r = ref(key, value)
-        mReferenceMap[key] = r
+        val r = ref(key, value)
+        referenceMap[key] = r
     }
 
     override fun onGet(key: K): V? {
         trim()
-        return mReferenceMap[key]?.get()
+        return referenceMap[key]?.get()
     }
 
     override fun onRemove(key: K): V? {
         trim()
-        return mReferenceMap.remove(key)?.get()
+        return referenceMap.remove(key)?.get()
     }
 
     private fun trim() {
         while (true) {
-            val r = mReferenceQueue.poll()
+            val r = referenceQueue.poll()
             r?.clear() ?: break
-            mReferenceMap.remove(keyOf(r as R))
+            referenceMap.remove(keyOf(r as R))
             r.get()?.let { onClear(it) }
         }
     }
 
-    abstract fun ref(key: K, value: V, queue: ReferenceQueue<V> = mReferenceQueue): R
+    abstract fun ref(key: K, value: V, queue: ReferenceQueue<V> = referenceQueue): R
     abstract fun keyOf(ref: R): K
 
     open fun onClear(value: V) {}
 }
 
-open class SoftCache<K, V> : ReferenceCache<K, V, SoftReference<V>> {
+open class SoftCache<K, V> : ReferenceCache<K, V, KeySoftReference<K, V>> {
     constructor() : super()
     constructor(initialSize: Int) : super(initialSize)
 
-    override fun ref(key: K, value: V, queue: ReferenceQueue<V>): SoftReference<V> {
-        return MySoftReference(key, value, queue)
-    }
+    override fun ref(key: K, value: V, queue: ReferenceQueue<V>): KeySoftReference<K, V> = KeySoftReference(key, value, queue)
 
-    override fun keyOf(ref: SoftReference<V>): K {
-        return (ref as SoftCache<K, V>.MySoftReference).key
-    }
-
-    inner class MySoftReference(val key: K, value: V, queue: ReferenceQueue<V>) : SoftReference<V>(value, queue)
+    override fun keyOf(ref: KeySoftReference<K, V>): K = ref.key
 }
 
-class WeakCache<K, V> : ReferenceCache<K, V, WeakReference<V>> {
+class WeakCache<K, V> : ReferenceCache<K, V, KeyWeakReference<K, V>> {
     constructor() : super()
     constructor(initialSize: Int) : super(initialSize)
 
-    override fun ref(key: K, value: V, queue: ReferenceQueue<V>): WeakReference<V> {
-        return MyWeakReference(key, value, queue)
-    }
+    override fun ref(key: K, value: V, queue: ReferenceQueue<V>): KeyWeakReference<K, V> = KeyWeakReference(key, value, queue)
 
-    override fun keyOf(ref: WeakReference<V>): K {
-        return (ref as WeakCache<K, V>.MyWeakReference).key
-    }
-
-    inner class MyWeakReference(val key: K, value: V, queue: ReferenceQueue<V>) : WeakReference<V>(value, queue)
+    override fun keyOf(ref: KeyWeakReference<K, V>): K = ref.key
 }
+
+class KeySoftReference<K, V>(val key: K, value: V, queue: ReferenceQueue<V>) : SoftReference<V>(value, queue)
+
+class KeyWeakReference<K, V>(val key: K, value: V, queue: ReferenceQueue<V>) : WeakReference<V>(value, queue)

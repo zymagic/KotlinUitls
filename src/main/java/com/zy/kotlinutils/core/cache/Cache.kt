@@ -10,5 +10,4 @@ interface Cache<K, V> {
     fun all(): Map<K, V> {
         return HashMap()
     }
-    fun clear() {}
 }

@@ -56,7 +56,7 @@ interface Scheduler {
     fun schedule(f: () -> Unit)
 }
 
-class Attachment<K, V>(val key: K) {
+open class Attachment<K, V>(val key: K) {
     private var _obj: V? = null
     var obj: V?
         get() = _obj
