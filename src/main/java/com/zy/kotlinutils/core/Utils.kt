@@ -43,16 +43,14 @@ fun SafeBlock.or(f: (Exception) -> Unit): SafeBlock {
 
 fun SafeBlock.forward(f: () -> Unit) = f()
 
+inline fun <reified R> Any?.ptr(r: R): R = if (this is R) this else r
+inline fun <reified R> Any?.ptr(): R? = if (this is R) this else null
+
 fun <T> Boolean.select(a: T, b: T): T = if (this) a else b
 
 fun <T, R: () -> Boolean> R.select(a: T, b: T): T = this.invoke().select(a, b)
 
 fun <T> select(a: T, b: T, f: () -> Boolean) : T = f().select(a, b)
-
-fun Cursor.manage(f: Cursor.() -> Unit) {
-    f()
-    closeQuietly()
-}
 
 fun test2() {
     async {
