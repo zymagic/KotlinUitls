@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.zy.kotlinutils.core.ptr
 import kotlin.reflect.KProperty
+import kotlin.reflect.jvm.javaType
 
 class Preference<T>(private val def: T? = null,
                     private val key: String? = null,
@@ -14,7 +15,7 @@ class Preference<T>(private val def: T? = null,
 
     operator fun getValue(obj: Any?, property: KProperty<*>): T {
         val key = key ?: property.name.formatPreferenceKey()
-        return when (property.javaClass) {
+        return when (property.returnType.javaType) {
             Int::class.java -> pref.getInt(key, def.asNumber()?.toInt() ?: 0)
             Short::class.java -> pref.getInt(key, def.asNumber()?.toInt() ?: 0).toShort()
             Byte::class.java -> pref.getInt(key, def.asNumber()?.toInt() ?: 0).toByte()
@@ -28,7 +29,7 @@ class Preference<T>(private val def: T? = null,
 
     operator fun setValue(obj: Any?, property: KProperty<*>, value: T) {
         val key = key ?: property.name.formatPreferenceKey()
-        when (property.javaClass) {
+        when (property.returnType.javaType) {
             Int::class.java, Short::class.java, Byte::class.java -> {
                 value.asNumber()?.let {
                     pref.edit().putInt(key, it.toInt()).apply()
